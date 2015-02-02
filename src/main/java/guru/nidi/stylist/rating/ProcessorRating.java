@@ -13,9 +13,9 @@ public class ProcessorRating {
         fileRatings.add(fileRating);
     }
 
-    public double rating() {
+    public Double severityPerByte() {
         if (fileRatings.isEmpty()) {
-            return 0;
+            return null;
         }
         final double sum = fileRatings.stream()
                 .map(FileRating::severityPerByte)

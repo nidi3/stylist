@@ -2,7 +2,6 @@ package guru.nidi.stylist.rating;
 
 import org.springframework.stereotype.Service;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -12,12 +11,16 @@ import java.io.OutputStreamWriter;
  */
 @Service
 public class BatchCreator {
-    public void createBatch(double rating, OutputStream target) throws IOException {
-        final int r = (int) (255 * (1 - rating));
-        final int g = (int) (200 * (rating));
-        final String rgb = toHex(r) + toHex(g) + "00";
-        final String value = Math.round(100 * rating) + "%";
-        write(rgb, value, target);
+    public void createBatch(Double rating, OutputStream target) throws IOException {
+        if (rating == null) {
+            write("aaa", "???", target);
+        } else {
+            final int r = (int) (255 * (1 - rating));
+            final int g = (int) (200 * (rating));
+            final String rgb = toHex(r) + toHex(g) + "00";
+            final String value = Math.round(100 * rating) + "%";
+            write(rgb, value, target);
+        }
     }
 
     public void createInProgress(OutputStream target) throws IOException {

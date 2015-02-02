@@ -7,8 +7,6 @@ import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import guru.nidi.stylist.rating.FileLister;
 import guru.nidi.stylist.rating.Processor;
 import guru.nidi.stylist.rating.ProcessorRating;
-import guru.nidi.stylist.rating.Rating;
-import org.springframework.stereotype.Service;
 import org.xml.sax.InputSource;
 
 import java.io.File;
@@ -31,13 +29,13 @@ public class CheckstyleProcessor implements Processor, AutoCloseable {
     }
 
     @Override
-    public double process(File basedir, List<String> excludes) {
+    public Double calcSeverity(File basedir, List<String> excludes) {
         final ProcessorRating processorRating = new ProcessorRating();
         final CheckstyleRater listener = new CheckstyleRater(processorRating);
         checker.addListener(listener);
         checker.process(new FileLister(basedir, excludes).list(".java"));
         checker.removeListener(listener);
-        return processorRating.rating();
+        return processorRating.severityPerByte();
     }
 
     @Override

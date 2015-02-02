@@ -1,7 +1,6 @@
 package guru.nidi.stylist.state;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import guru.nidi.stylist.rating.BatchCreator;
 import guru.nidi.stylist.rating.Processor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,19 +31,10 @@ public class Crawler {
         this.processors = processors;
     }
 
-    public static void main(String[] args) throws CheckstyleException, IOException {
-//        final File bd = new File("/Users/nidi/idea");
-//        new GitProvider(bd).load("https://github.com/nidi3/raml-tester");
-//        final InputStream config = Rater.class.getResourceAsStream("/sun_checks.xml");
-//        try (final CheckstyleProcessor csp = new CheckstyleProcessor(config)) {
-//            new Crawler(bd, mapper).apply(new Rater(csp));
-//        }
-    }
-
     @Scheduled(fixedDelay = 10 * 60 * 1000)
     public void apply() throws IOException {
         for (File projectDir : locator.projectsDir().listFiles(f -> f.isDirectory())) {
-            final double rating = rate(projectDir);
+            final Double rating = severity(projectDir);
             try (final FileOutputStream out = new FileOutputStream(locator.ratingByDir(projectDir))) {
                 mapper.writeValue(out, rating);
             }
@@ -54,12 +44,17 @@ public class Crawler {
         }
     }
 
-    private double rate(File basedir) throws IOException {
-        double ratings = 0;
+    private Double severity(File basedir) throws IOException {
+        double severitySum = 0;
+        int count = 0;
         for (Processor processor : processors) {
-            ratings += processor.process(basedir, asList("/test/", "/target/"));
+            final Double severity = processor.calcSeverity(basedir, asList("/test/", "/target/"));
+            if (severity != null) {
+                severitySum += severity;
+                count++;
+            }
         }
-        return 1 / (1 + 100 * ratings / processors.length);
+        return count == 0 ? null : 1 / (1 + 100 * severitySum / count);
     }
 
     public Status getStatus(String url) {
