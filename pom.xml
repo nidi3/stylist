@@ -21,7 +21,17 @@
     <properties />
 
     <build>
-
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>1.8</source>
+                        <target>1.8</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
     <scm>
@@ -32,7 +42,11 @@
     </scm>
 
     <dependencies>
-
+        <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>6.3</version>
+        </dependency>
     </dependencies>
 
 
