@@ -4,17 +4,17 @@ import com.puppycrawl.tools.checkstyle.api.AuditEvent;
 import com.puppycrawl.tools.checkstyle.api.AuditListener;
 import com.puppycrawl.tools.checkstyle.api.SeverityLevel;
 import guru.nidi.stylist.rating.FileRating;
-import guru.nidi.stylist.rating.Rating;
+import guru.nidi.stylist.rating.ProcessorRating;
 
 /**
  *
  */
 public class CheckstyleRater implements AuditListener {
-    private final Rating rating;
+    private final ProcessorRating processorRating;
     private FileRating fileRating;
 
-    public CheckstyleRater(Rating rating) {
-        this.rating = rating;
+    public CheckstyleRater(ProcessorRating processorRating) {
+        this.processorRating = processorRating;
     }
 
     @Override
@@ -32,7 +32,7 @@ public class CheckstyleRater implements AuditListener {
 
     @Override
     public void fileFinished(AuditEvent evt) {
-        rating.addFileRating(fileRating);
+        processorRating.addFileRating(fileRating);
     }
 
     @Override

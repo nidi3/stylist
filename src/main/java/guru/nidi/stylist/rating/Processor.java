@@ -1,10 +1,11 @@
 package guru.nidi.stylist.rating;
 
 import java.io.File;
+import java.util.List;
 
 /**
  *
  */
 public interface Processor {
-    Rating process(File basedir);
+    double process(File basedir, List<String> excludes);
 }

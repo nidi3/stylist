@@ -6,7 +6,7 @@ import java.util.List;
 /**
  *
  */
-public class Rating {
+public class ProcessorRating {
     private final List<FileRating> fileRatings = new ArrayList<>();
 
     public void addFileRating(FileRating fileRating) {
@@ -14,10 +14,13 @@ public class Rating {
     }
 
     public double rating() {
+        if (fileRatings.isEmpty()) {
+            return 0;
+        }
         final double sum = fileRatings.stream()
                 .map(FileRating::severityPerByte)
                 .reduce((accu, severity) -> accu + severity)
                 .orElse(0D);
-        return 1 / (1 + 100 * sum / fileRatings.size());
+        return sum / fileRatings.size();
     }
 }
