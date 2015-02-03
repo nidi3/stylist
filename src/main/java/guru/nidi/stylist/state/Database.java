@@ -70,8 +70,13 @@ public class Database {
         server.shutdown();
     }
 
-    public void update(Project project) {
-        saveImpl(tx.<List<ODocument>>query(new OSQLSynchQuery<>("select from Project where name=?"), project.getName()).get(0), project);
+    public void saveOrUpdate(Project project) {
+        final List<ODocument> docs = tx.<List<ODocument>>query(new OSQLSynchQuery<>("select from Project where origin=?"), project.getOrigin());
+        if (docs.isEmpty()) {
+            save(project);
+        } else {
+            saveImpl(docs.get(0), project);
+        }
     }
 
     public void save(Project project) {
@@ -89,16 +94,19 @@ public class Database {
         }
     }
 
-    public List<Project> getProjects() {
-        return tx.<List<ODocument>>query(new OSQLSynchQuery<>("select from Project")).stream()
+    public List<Project> getProjects(String fields) {
+        return tx.<List<ODocument>>query(new OSQLSynchQuery<>(selectProject(fields))).stream()
                 .map(doc -> toDomain(doc, Project.class))
                 .collect(Collectors.toList());
     }
 
-    public Project findProjectByOrigin(String origin, boolean withRatings) {
-        final String fields = withRatings ? "" : " name,dir,origin,severity";
-        final List<ODocument> docs = tx.<List<ODocument>>query(new OSQLSynchQuery<>("select" + fields + " from Project where origin=?"), origin);
+    public Project findProjectByOrigin(String origin, String fields) {
+        final List<ODocument> docs = tx.<List<ODocument>>query(new OSQLSynchQuery<>(selectProject(fields) + "where origin=?"), origin);
         return docs.isEmpty() ? null : toDomain(docs.get(0), Project.class);
+    }
+
+    private String selectProject(String fields) {
+        return "select " + (fields == null ? "" : fields) + " from Project ";
     }
 
     public String getBatch(Integer rating) {

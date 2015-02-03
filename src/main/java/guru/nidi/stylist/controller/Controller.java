@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class Controller {
@@ -22,14 +23,22 @@ public class Controller {
     }
 
     @RequestMapping("/rating")
-    public String rating(@RequestParam String url) throws IOException {
-        final Project project = database.findProjectByOrigin(url,false);
+    public String rating(@RequestParam String url) {
+        final Project project = database.findProjectByOrigin(url, "severity");
         if (project == null) {
             gitLoader.requestLoad(url);
         }
         return database.getBatch(project == null || project.getSeverity() == null
                 ? null
                 : (int) Math.round(100 * project.getSeverity()));
+    }
+
+    @RequestMapping("/list")
+    public List<Project> list() {
+        return database.getProjects("name,origin,severity").stream()
+                .filter(p -> p.getSeverity() != null)
+                .sorted((a, b) -> b.getSeverity() - a.getSeverity() < 0 ? -1 : 1)
+                .collect(Collectors.toList());
     }
 
 }

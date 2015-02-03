@@ -1,10 +1,12 @@
 package guru.nidi.stylist;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import guru.nidi.stylist.rating.BatchCreator;
 import guru.nidi.stylist.rating.checkstyle.CheckstyleProcessor;
+import guru.nidi.stylist.state.Crawler;
 import guru.nidi.stylist.state.Database;
 import guru.nidi.stylist.state.DatabaseIniter;
 import guru.nidi.stylist.state.GitLoader;
@@ -35,6 +37,7 @@ public class Application {
     public ObjectMapper objectMapper() {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         return mapper;
     }
 
@@ -55,8 +58,8 @@ public class Application {
     }
 
     @Bean
-    public GitLoader gitLoader(Database database, @Value("${projects.dir}") File projectsDir) {
-        return new GitLoader(database, projectsDir);
+    public GitLoader gitLoader(Database database, @Value("${projects.dir}") File projectsDir, Crawler crawler) {
+        return new GitLoader(database, projectsDir, crawler);
     }
 
 }

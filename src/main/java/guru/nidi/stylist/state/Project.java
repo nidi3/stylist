@@ -14,23 +14,23 @@ import java.util.ListIterator;
  */
 public class Project {
     private final String name;
-    private final File dir;
+    private final String location;
     private final String origin;
     private final List<ProcessorRating> ratings;
     private Double severity;
 
-    public Project(String name, File dir, String origin) {
-        this(name, dir.getAbsolutePath(), origin, new ArrayList<>(), null);
+    public Project(String name, String location, String origin) {
+        this(name, location, origin, new ArrayList<>(), null);
     }
 
     @JsonCreator
-    private Project(@JsonProperty("name") String name, @JsonProperty("dir") String dir,
+    private Project(@JsonProperty("name") String name, @JsonProperty("location") String location,
                     @JsonProperty("origin") String origin, @JsonProperty("ratings") List<ProcessorRating> ratings,
                     @JsonProperty("severity") Double severity) {
         this.name = name;
         this.origin = origin;
-        this.dir = new File(dir);
-        this.ratings = ratings;
+        this.location =location;
+        this.ratings = ratings == null ? new ArrayList<>() : ratings;
         this.severity = severity;
     }
 
@@ -50,8 +50,8 @@ public class Project {
         return name;
     }
 
-    public File getDir() {
-        return dir;
+    public String getLocation() {
+        return location;
     }
 
     public String getOrigin() {
@@ -59,7 +59,7 @@ public class Project {
     }
 
     public Double getSeverity() {
-        if (severity == null && ratings != null) {
+        if (severity == null) {
             calcSeverity();
         }
         return severity;

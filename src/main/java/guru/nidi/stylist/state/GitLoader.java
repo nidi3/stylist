@@ -1,7 +1,6 @@
 package guru.nidi.stylist.state;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,15 +15,39 @@ public class GitLoader {
 
     private final Database database;
     private final File projectsDir;
+    private final Crawler crawler;
 
-    public GitLoader(Database database, File projectsDir) {
+    public GitLoader(Database database, File projectsDir, Crawler crawler) {
         this.database = database;
         this.projectsDir = projectsDir;
+        this.crawler = crawler;
         projectsDir.mkdirs();
     }
 
     public void requestLoad(String url) {
         new Thread(() -> load(url)).start();
+    }
+
+    @Scheduled(fixedDelayString = "${git.period}")
+    public void refresh() throws IOException {
+        for (Project project : database.getProjects("origin")) {
+            load(project.getOrigin());
+        }
+    }
+
+    private void load(String url) {
+        doInLock(url, () -> {
+            final File target = projectByUrl(url);
+            if (target.exists()) {
+                execute(target, "git", "pull");
+            } else {
+                execute(projectsDir, "git", "clone", url, target.getAbsolutePath());
+            }
+            final int last = url.lastIndexOf('/');
+            final Project project = new Project(url.substring(last + 1), target.getAbsolutePath(), url);
+            crawler.apply(project);
+            database.saveOrUpdate(project);
+        });
     }
 
     private void doInLock(String url, Runnable task) {
@@ -45,19 +68,6 @@ public class GitLoader {
         } finally {
             lock.delete();
         }
-    }
-
-    public void load(String url) {
-        doInLock(url, () -> {
-            final File target = projectByUrl(url);
-            if (target.exists()) {
-                execute(target, "git", "pull");
-            } else {
-                execute(projectsDir, "git", "clone", url, target.getAbsolutePath());
-            }
-            final int last = url.lastIndexOf('/');
-            database.save(new Project(url.substring(last + 1), target, url));
-        });
     }
 
     private void execute(File dir, String... command) {
