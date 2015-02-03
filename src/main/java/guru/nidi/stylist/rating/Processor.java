@@ -7,5 +7,5 @@ import java.util.List;
  *
  */
 public interface Processor {
-    Double calcSeverity(File basedir, List<String> excludes);
+    ProcessorRating calcRating(File basedir, List<String> excludes);
 }

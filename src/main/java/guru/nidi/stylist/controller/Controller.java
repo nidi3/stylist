@@ -1,9 +1,9 @@
 package guru.nidi.stylist.controller;
 
-import guru.nidi.stylist.state.Crawler;
+import guru.nidi.stylist.state.Database;
 import guru.nidi.stylist.state.GitLoader;
+import guru.nidi.stylist.state.Project;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,21 +12,24 @@ import java.io.IOException;
 
 @RestController
 public class Controller {
-    private final Crawler crawler;
+    private final Database database;
     private final GitLoader gitLoader;
 
     @Autowired
-    public Controller(Crawler crawler, GitLoader gitLoader) {
-        this.crawler = crawler;
+    public Controller(Database database, GitLoader gitLoader) {
+        this.database = database;
         this.gitLoader = gitLoader;
     }
 
     @RequestMapping("/rating")
-    public FileSystemResource rating(@RequestParam String url) throws IOException {
-        if (crawler.getStatus(url) == Crawler.Status.NO_PROJECT) {
+    public String rating(@RequestParam String url) throws IOException {
+        final Project project = database.findProjectByOrigin(url,false);
+        if (project == null) {
             gitLoader.requestLoad(url);
         }
-        return new FileSystemResource(crawler.getBatch(url));
+        return database.getBatch(project == null || project.getSeverity() == null
+                ? null
+                : (int) Math.round(100 * project.getSeverity()));
     }
 
 }

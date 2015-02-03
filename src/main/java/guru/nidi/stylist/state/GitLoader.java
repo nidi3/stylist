@@ -11,15 +11,16 @@ import java.io.InputStreamReader;
 /**
  *
  */
-@Service
 public class GitLoader {
     private static final int LOCK_TIMEOUT = 60 * 60 * 1000;
 
-    private final Locator locator;
+    private final Database database;
+    private final File projectsDir;
 
-    @Autowired
-    public GitLoader(Locator locator) {
-        this.locator = locator;
+    public GitLoader(Database database, File projectsDir) {
+        this.database = database;
+        this.projectsDir = projectsDir;
+        projectsDir.mkdirs();
     }
 
     public void requestLoad(String url) {
@@ -27,7 +28,7 @@ public class GitLoader {
     }
 
     private void doInLock(String url, Runnable task) {
-        final File lock = locator.lockByUrl(url);
+        final File lock = lockByUrl(url);
         if (lock.exists()) {
             if (System.currentTimeMillis() - lock.lastModified() < LOCK_TIMEOUT) {
                 return;
@@ -48,12 +49,14 @@ public class GitLoader {
 
     public void load(String url) {
         doInLock(url, () -> {
-            final File target = locator.projectByUrl(url);
+            final File target = projectByUrl(url);
             if (target.exists()) {
                 execute(target, "git", "pull");
             } else {
-                execute(locator.projectsDir(), "git", "clone", url, target.getAbsolutePath());
+                execute(projectsDir, "git", "clone", url, target.getAbsolutePath());
             }
+            final int last = url.lastIndexOf('/');
+            database.save(new Project(url.substring(last + 1), target, url));
         });
     }
 
@@ -77,5 +80,27 @@ public class GitLoader {
         }
     }
 
+    public File projectByUrl(String url) {
+        return new File(projectsDir, normalized(url));
+    }
+
+    public File lockByUrl(String url) {
+        return new File(projectsDir, "." + normalized(url));
+    }
+
+    private String normalized(String url) {
+        StringBuilder s = new StringBuilder(url);
+        int pos = url.indexOf("://");
+        if (pos >= 0) {
+            s.delete(0, pos + 3);
+        }
+        for (int i = 0; i < s.length(); i++) {
+            final char c = s.charAt(i);
+            if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) {
+                s.setCharAt(i, '-');
+            }
+        }
+        return s.toString();
+    }
 
 }

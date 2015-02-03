@@ -29,13 +29,13 @@ public class CheckstyleProcessor implements Processor, AutoCloseable {
     }
 
     @Override
-    public Double calcSeverity(File basedir, List<String> excludes) {
-        final ProcessorRating processorRating = new ProcessorRating();
+    public ProcessorRating calcRating(File basedir, List<String> excludes) {
+        final ProcessorRating processorRating = new ProcessorRating("Checkstyle");
         final CheckstyleRater listener = new CheckstyleRater(processorRating);
         checker.addListener(listener);
         checker.process(new FileLister(basedir, excludes).list(".java"));
         checker.removeListener(listener);
-        return processorRating.severityPerByte();
+        return processorRating;
     }
 
     @Override

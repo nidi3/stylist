@@ -37,7 +37,7 @@ public class CheckstyleRater implements AuditListener {
 
     @Override
     public void addError(AuditEvent evt) {
-        fileRating.addProblem(severity(evt.getSeverityLevel()));
+        fileRating.addProblem(severity(evt.getSeverityLevel()), evt.getMessage());
     }
 
     private double severity(SeverityLevel level) {
